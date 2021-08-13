@@ -1,0 +1,28 @@
+syntax = "proto3";
+package stockupdate.view;
+import "domain.proto";
+import "akkaserverless/annotations.proto";
+
+service StockByStoreUid {
+    rpc ProcessStockAggregated(domain.StockAggregated) returns (domain.WarehouseStock) {
+        option (akkaserverless.method).event.in = {
+            event_sourced_entity: "stock" 
+         };
+         option (akkaserverless.method).view.update = {
+            table: "stock"
+            transform_updates: true
+         };
+    }
+    rpc GetStocks(ByStoreUidRequest) returns (stream domain.Warehousestock) {
+        option (akkaserverless.method).view.query = {
+            query: "SELECT * FROM stock WHERE StoreUid = :StoreUid"
+        };
+        option (google.api.http) = {
+            get: "/store/{StoreUid}"
+        };
+    }
+}
+
+message ByStoreUidRequest {
+    string StoreUid = 1;
+}

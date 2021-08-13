@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package stockupdate;
+
+import "akkaserverless/annotations.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+message AggregateStoreStock {
+    string WarehouseUid = 1 [(akkaserverless.field).entity_key = true];
+    string StoreUid = 2;
+    int32 Stocklevel = 3;
+}
+message GetWarehouseStocks {
+    string WarehouseUid = 1 [(akkaserverless.field).entity_key = true];
+}
+message Stock {
+    string StoreUid = 1;
+    int32 Stocklevel = 2;
+}
+message WarehouseStock {
+    repeated Stock stocks = 1;
+}
+service StockUpdateService {
+    option (akkaserverless.service) = {
+        type: SERVICE_TYPE_ENTITY
+        component: ".domain.StockUpdate"
+    };
+    rpc AggregateStocks (AggregateStoreStock) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/{WarehouseUid}/stocks/update"
+            body: "*"
+        };
+    }
+    rpc GetStocks (GetWarehouseStocks) returns (WarehouseStock) {
+        option (google.api.http) = {
+            get: "/warehousestocks/{WarehouseUid}"
+        };
+    }
+}
